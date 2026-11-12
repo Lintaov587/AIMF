@@ -117,7 +117,7 @@ async function action(command,actor='HUMAN'){
  else if(command.type==='undo'){const move=undoStack.pop();if(move)await rotate({...move,sign:-move.sign,label:'撤回 '+(move.label??'推动')},actor,false);}
  else if(command.type==='reset'){createCube();moves=0;history=[];undoStack=[];started=0;finished=0;phase='waiting';renderTimer();}
  else throw Error('未知操作');
- }finally{busy=false;revision++;$('activity').textContent='';ui();await sync();}return snapshot();
+ }finally{busy=false;revision++;$('activity').textContent='';ui();if(actor!=='AI')await sync();}return snapshot();
 }
 function run(c){action(c).catch(e=>toast(e.message));}
 renderer.domElement.addEventListener('pointermove',e=>{

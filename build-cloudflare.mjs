@@ -14,9 +14,8 @@ let adminHtml=assets['/admin.html'].body.replace('正在验证账号…','').rep
 let adminJs=assets['/admin.js'].body.replace("editing=null;","editing=null,adminKey='';").replace("headers:{'Content-Type':'application/json'}","headers:{'Content-Type':'application/json','Authorization':'Bearer '+adminKey}");
 adminJs+="\n$('admin-signin').onsubmit=async e=>{e.preventDefault();adminKey=$('admin-key').value;$('admin-key').value='';try{await load();}catch(error){adminKey='';$('admin-content').hidden=true;$('admin-status').textContent=error.message;}};\n";
 await fs.writeFile('cloudflare-admin.generated.mjs','export const adminHtml='+JSON.stringify(adminHtml)+';\nexport const adminJs='+JSON.stringify(adminJs)+';\n');
-const core=(await fs.readFile('worker.js','utf8')).replace("import assets from './assets.generated.mjs';",'').replace("import {FAIR_PLAY} from './rules.js';",'').replace("import {leaderboardApi} from './leaderboard-api.js';",'');
-const leaderboard=(await fs.readFile('leaderboard-api.js','utf8')).replace('export async function','async function');
-await fs.writeFile('cloudflare-core.generated.mjs','const assets={};\nconst FAIR_PLAY='+JSON.stringify(FAIR_PLAY)+';\n'+leaderboard+'\n'+core);
+const core=(await fs.readFile('worker.js','utf8')).replace("import assets from './assets.generated.mjs';",'const assets={};');
+await fs.writeFile('cloudflare-core.generated.mjs',core);
 await build({absWorkingDir:root,tsconfigRaw:{},entryPoints:['cloudflare-worker.js'],outfile:path.join(output,'_worker.js'),bundle:true,format:'esm',platform:'browser',target:'es2022',minify:true});
 await fs.writeFile(path.join(output,'_routes.json'),JSON.stringify({version:1,include:['/api/*','/admin','/admin.html','/admin.js','/mcp'],exclude:[]}));
 await fs.writeFile(path.join(output,'_headers'),'/admin\n  Cache-Control: no-store\n/admin.html\n  Cache-Control: no-store\n/admin.js\n  Cache-Control: no-store\n');

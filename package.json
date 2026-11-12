@@ -10,14 +10,15 @@
     "build:cloudflare": "node build.mjs && node build-cloudflare.mjs"
   },
   "dependencies": {
-    "three": "0.180.0",
     "@dimforge/rapier3d-compat": "0.19.2",
-    "cubing": "0.66.1"
+    "cubing": "0.66.1",
+    "three": "0.180.0",
+    "ws": "8.22.2"
   },
   "devDependencies": {
-    "esbuild": "0.25.12",
     "drizzle-kit": "0.31.8",
     "drizzle-orm": "0.44.7",
+    "esbuild": "0.25.12",
     "miniflare": "4.20260730.0"
   },
   "description": "LLM 模仿挑战：通过可见状态操作三维魔方",

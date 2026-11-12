@@ -27,7 +27,7 @@ pnpm start
 
 ## Cloudflare Pages
 
-前端与 API 同域托管于 Cloudflare Pages，独立 D1 保存会话和在线榜单。GitHub 仅托管开源代码。部署方式见 [DEPLOYMENT.md](DEPLOYMENT.md)。
+前端与 API 同域托管于 Cloudflare Pages，WebSocket 推送操作，Durable Objects 保存独立会话，D1 保存在线榜单。GitHub 仅托管开源代码。部署方式见 [DEPLOYMENT.md](DEPLOYMENT.md)。
 
 Three.js + Rapier + cubing.js。打乱使用随机合法状态并排除一步可解状态，不是 WCA 官方 TNoodle 程序。
 

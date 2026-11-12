@@ -1,7 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
-import {FAIR_PLAY} from './rules.js';
+import {build} from 'esbuild';
 const root=path.dirname(fileURLToPath(import.meta.url)),source=path.join(root,'client');
 const assets={};
 async function add(url,file,type='text/javascript; charset=utf-8',transform=s=>s){assets[url]={type,body:transform(await fs.readFile(file,'utf8'))};}
@@ -22,10 +23,14 @@ await fs.writeFile(path.join(root,'vendor-random.js'),random);
 const cubing=path.join(root,'node_modules/cubing/dist/lib/cubing');
 async function walk(dir){for(const item of await fs.readdir(dir,{withFileTypes:true})){const file=path.join(dir,item.name);if(item.isDirectory())await walk(file);else if(item.name.endsWith('.js'))await add('/vendor/cubing/'+path.relative(cubing,file).replaceAll('\\','/'),file,undefined,s=>s.replaceAll('"random-uint-below"','"/vendor/random.js"'));}}
 await walk(cubing);
+// Version application modules together so browser caches cannot mix protocol releases.
+const version=createHash('sha256').update(Object.entries(assets).filter(([url])=>!url.startsWith('/vendor/')).map(([url,a])=>url+a.body).join('')).digest('hex').slice(0,12);
+for(const [url,asset]of Object.entries(assets))if(!url.startsWith('/vendor/')&&(url.endsWith('.js')||url.endsWith('.html')))asset.body=asset.body.replace(/(["'])\/(app\.js|style\.css|transport\.js|scramble-client\.js|rules\.js|competition\.js|runtime-config\.js|admin\.js)(["'])/g,(_,quote,name,end)=>quote+'/'+name+'?v='+version+end);
 await fs.writeFile(path.join(root,'assets.generated.mjs'),'export default '+JSON.stringify(assets)+';');
 await fs.mkdir(path.join(root,'dist/server'),{recursive:true});await fs.mkdir(path.join(root,'dist/.openai'),{recursive:true});
-const leaderboard=await fs.readFile(path.join(root,'leaderboard-api.js'),'utf8');
-const worker=await fs.readFile(path.join(root,'worker.js'),'utf8');
-await fs.writeFile(path.join(root,'dist/server/index.js'),'const assets='+JSON.stringify(assets)+';\nconst FAIR_PLAY='+JSON.stringify(FAIR_PLAY)+';\n'+leaderboard.replace('export async function','async function')+'\n'+worker.replace("import assets from './assets.generated.mjs';",'').replace("import {FAIR_PLAY} from './rules.js';",'').replace("import {leaderboardApi} from './leaderboard-api.js';",''));
+await build({absWorkingDir:root,tsconfigRaw:{},entryPoints:['worker.js'],outfile:'dist/server/index.js',bundle:true,format:'esm',platform:'browser',target:'es2022'});
+await fs.mkdir('dist/relay',{recursive:true});
+await build({absWorkingDir:root,tsconfigRaw:{},entryPoints:['relay-worker.js'],outfile:'dist/relay/index.js',bundle:true,format:'esm',platform:'browser',target:'es2022'});
 await fs.copyFile(path.join(root,'.openai/hosting.json'),path.join(root,'dist/.openai/hosting.json'));
 console.log('Built Worker and',Object.keys(assets).length,'assets');
+

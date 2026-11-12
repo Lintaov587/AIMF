@@ -17,6 +17,9 @@ importers:
       three:
         specifier: 0.180.0
         version: 0.180.0
+      ws:
+        specifier: 8.22.2
+        version: 8.22.2
     devDependencies:
       drizzle-kit:
         specifier: 0.31.8
@@ -814,6 +817,18 @@ packages:
       utf-8-validate:
         optional: true
 
+  ws@8.22.2:
+    resolution: {integrity: sha512-/rEZ2ejown2N5gxVTHUu9bVVC7ttu0/Tgzf5hbTOixR3Fs7mbbXgn2DbdbcKgJOmpQMtrIUWivtYuVMnp/W/yA==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
   youch-core@0.3.3:
     resolution: {integrity: sha512-ho7XuGjLaJ2hWHoK8yFnsUGy2Y5uDpqSTq1FkHLK4/oqKtyUU1AFbOOxY4IpC9f0fTLjwYbslUz0Po5BpD1wrA==}
 
@@ -1354,6 +1369,8 @@ snapshots:
       '@cloudflare/workerd-windows-64': 1.20260730.1
 
   ws@8.21.0: {}
+
+  ws@8.22.2: {}
 
   youch-core@0.3.3:
     dependencies:
