@@ -2,7 +2,7 @@
 
 让 LLM 像人一样观察、翻看并还原三维魔方。模型只能读取当前可见面，通过接口操作；挑战禁止使用求解器或编写求解器代码。
 
-[在线体验](https://llm-cube-challenge.pages.dev/)
+[在线体验](https://soulrpg.app/)
 
 ## 本地部署
 
