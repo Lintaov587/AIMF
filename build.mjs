@@ -1,0 +1,31 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {FAIR_PLAY} from './rules.js';
+const root=path.dirname(fileURLToPath(import.meta.url)),source=path.join(root,'client');
+const assets={};
+async function add(url,file,type='text/javascript; charset=utf-8',transform=s=>s){assets[url]={type,body:transform(await fs.readFile(file,'utf8'))};}
+for(const [url,file,type] of [['/index.html','index.html','text/html; charset=utf-8'],['/style.css','style.css','text/css; charset=utf-8'],['/app.js','app.js'],['/scramble-client.js','scramble-client.js']])await add(url,path.join(source,file),type);
+await add('/competition.js',path.join(source,'competition.js'));
+await add('/runtime-config.js',path.join(source,'runtime-config.js'));
+await add('/admin.html',path.join(source,'admin.html'),'text/html; charset=utf-8');
+await add('/admin.js',path.join(source,'admin.js'));
+await add('/transport.js',path.join(root,'browser-client.js'));
+await add('/rules.js',path.join(root,'rules.js'));
+await add('/vendor/three.js',path.join(root,'node_modules/three/build/three.module.js'));
+await add('/vendor/three.core.js',path.join(root,'node_modules/three/build/three.core.js'));
+await add('/vendor/room-environment.js',path.join(root,'node_modules/three/examples/jsm/environments/RoomEnvironment.js'));
+await add('/vendor/rapier.js',path.join(root,'node_modules/@dimforge/rapier3d-compat/rapier.mjs'));
+const random=await fs.readFile(path.resolve(await fs.realpath(path.join(root,'node_modules/cubing')),'../random-uint-below/dist/esm/index.js'),'utf8');
+assets['/vendor/random.js']={type:'text/javascript',body:random};
+await fs.writeFile(path.join(root,'vendor-random.js'),random);
+const cubing=path.join(root,'node_modules/cubing/dist/lib/cubing');
+async function walk(dir){for(const item of await fs.readdir(dir,{withFileTypes:true})){const file=path.join(dir,item.name);if(item.isDirectory())await walk(file);else if(item.name.endsWith('.js'))await add('/vendor/cubing/'+path.relative(cubing,file).replaceAll('\\','/'),file,undefined,s=>s.replaceAll('"random-uint-below"','"/vendor/random.js"'));}}
+await walk(cubing);
+await fs.writeFile(path.join(root,'assets.generated.mjs'),'export default '+JSON.stringify(assets)+';');
+await fs.mkdir(path.join(root,'dist/server'),{recursive:true});await fs.mkdir(path.join(root,'dist/.openai'),{recursive:true});
+const leaderboard=await fs.readFile(path.join(root,'leaderboard-api.js'),'utf8');
+const worker=await fs.readFile(path.join(root,'worker.js'),'utf8');
+await fs.writeFile(path.join(root,'dist/server/index.js'),'const assets='+JSON.stringify(assets)+';\nconst FAIR_PLAY='+JSON.stringify(FAIR_PLAY)+';\n'+leaderboard.replace('export async function','async function')+'\n'+worker.replace("import assets from './assets.generated.mjs';",'').replace("import {FAIR_PLAY} from './rules.js';",'').replace("import {leaderboardApi} from './leaderboard-api.js';",''));
+await fs.copyFile(path.join(root,'.openai/hosting.json'),path.join(root,'dist/.openai/hosting.json'));
+console.log('Built Worker and',Object.keys(assets).length,'assets');

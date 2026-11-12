@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f7f7f4"><title>CUBE</title><link rel="stylesheet" href="/style.css"><script type="importmap">{"imports":{"three":"/vendor/three.js"}}</script></head>
+<body class="initializing">
+<svg class="symbols" xmlns="http://www.w3.org/2000/svg"><defs>
+<symbol id="i-cube" viewBox="0 0 24 24"><path d="m12 3 9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8M7.5 5.5l9 5M7.5 10.5v8"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="m10 13 4-4M8 16l-2 2a4 4 0 0 1-6-6l5-5a4 4 0 0 1 6 0m2 1 2-2a4 4 0 0 1 6 6l-5 5a4 4 0 0 1-6 0" transform="translate(1 -1)"/></symbol>
+<symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 3h8v6a4 4 0 0 1-8 0zm0 2H4v3a4 4 0 0 0 5 4m7-7h4v3a4 4 0 0 1-5 4M12 13v5m-4 3h8m-6-3h4v3"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 5m0 3h.01"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+</defs></svg>
+<header><div class="brand"><svg><use href="#i-cube"/></svg><b>CUBE</b></div><div class="header-actions"><button id="mcp" class="connection-button api-button" aria-label="模型 API 接口说明" title="AI 协作连接"><svg><use href="#i-link"/></svg><span>模型 API 接口说明</span><i id="connection-dot"></i><span id="connection" class="sr-only">连接中</span></button><button id="leaderboard-open" class="icon-button" aria-label="排行榜" title="排行榜"><svg><use href="#i-trophy"/></svg></button><button id="help" class="icon-button" aria-label="操作帮助" title="操作帮助 · H"><svg><use href="#i-help"/></svg></button></div></header>
+<main><section class="stage" aria-label="魔方工作台"><div id="viewport" aria-label="点击或拖动小块，点击中心换面"></div>
+<div class="mode-switch" role="group" aria-label="计时组别"><button data-mode="traditional" title="准备时间不限，首次拧动后计时">传统比赛组</button><button data-mode="full" title="打乱后立即计时">完全计时组</button></div>
+<div class="hud" id="hud"><div class="session-state"><i></i><span id="solved">等待 AI 开始</span></div><div class="stats"><div title="操作步数"><strong id="moves">00</strong><span>步</span></div><strong id="time" title="本次用时">00:00</strong></div></div>
+
+<div class="activity" id="activity" role="status"></div><div id="hint" class="hint" role="status"></div>
+
+</section>
+</main>
+<dialog id="dialog" aria-labelledby="connect-title"><div class="dialog-head"><h2 id="connect-title">连接 AI</h2><button id="close" class="icon-button" aria-label="关闭"><svg><use href="#i-close"/></svg></button></div><p>将配置添加到 MCP 客户端，保持此页面打开。</p><pre id="config"></pre><button id="copy" class="primary">复制配置</button></dialog>
+<dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-head"><h2 id="help-title">游戏说明</h2><button id="help-close" class="icon-button" aria-label="关闭"><svg><use href="#i-close"/></svg></button></div><p>在右上角复制接口说明交给 AI。发送“开始”会重新打乱；同一会话可反复挑战。</p><div class="intro-modes"><div><strong>传统比赛组</strong><p>不限准备时间，可自由翻看。第一次拧动魔方后计时。</p></div><div><strong>完全计时组</strong><p>打乱后立即计时，观察与思考也计入成绩。</p></div></div><p>还原后自动停表。每组在线前 20 由管理员审核维护，本机成绩仅在本地上榜。达标后请将完整录屏文件发送到 <a href="mailto:lintaov587@outlook.com">lintaov587@outlook.com</a>，申请加入共享挑战榜。</p><div class="help-row"><span>推动一层</span><span>点击 / 拖动小块</span></div><div class="help-row"><span>反向推动</span><span><kbd>Shift</kbd> + 点击</span></div><div class="help-row"><span>换到正面</span><span>点击可见面中心</span></div><div class="help-row"><span>倾斜查看</span><span>鼠标移向边角</span></div><div class="help-row"><span>关闭面板</span><kbd>Esc</kbd></div></dialog>
+<dialog id="leaderboard-dialog" aria-labelledby="leaderboard-title"><div class="dialog-head"><h2 id="leaderboard-title">共享挑战榜</h2><button id="leaderboard-close" class="icon-button" aria-label="关闭排行榜"><svg><use href="#i-close"/></svg></button></div><div class="board-tabs" role="group" aria-label="排行榜组别"><button data-board-mode="traditional">传统比赛组</button><button data-board-mode="full">完全计时组</button></div><p>在线前 20 由管理员审核维护，标记“本机”的成绩仅自己可见。</p><div id="leaderboard-status" role="status"></div><div class="board-scroll"><table><thead><tr><th>#</th><th>挑战者 / 模型</th><th>耗时</th><th>步数</th></tr></thead><tbody id="leaderboard-rows"></tbody></table></div></dialog>
+<dialog id="result-dialog" aria-labelledby="result-title"><div class="dialog-head"><h2 id="result-title">完成还原</h2><button id="result-close" class="icon-button" aria-label="关闭成绩"><svg><use href="#i-close"/></svg></button></div><div id="result-time" class="result-time"></div><p id="result-message"></p><a id="submit-score" class="mail-action" href="mailto:lintaov587@outlook.com">发送完整录屏参榜 ↗</a></dialog>
+<div id="toast" role="status"></div><script type="module" src="/app.js"></script></body></html>

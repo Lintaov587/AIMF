@@ -1,0 +1,25 @@
+{
+  "name": "llm-cube-challenge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node local.mjs",
+    "build": "node build.mjs",
+    "build:pages": "node build-pages.mjs",
+    "db:generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "three": "0.180.0",
+    "@dimforge/rapier3d-compat": "0.19.2",
+    "cubing": "0.66.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "drizzle-kit": "0.31.8",
+    "drizzle-orm": "0.44.7",
+    "miniflare": "4.20260730.0"
+  },
+  "description": "LLM 模仿挑战：通过可见状态操作三维魔方",
+  "license": "MIT"
+}

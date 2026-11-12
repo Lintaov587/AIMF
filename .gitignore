@@ -1,0 +1,12 @@
+node_modules/
+.pnpm-store/
+dist/
+.local/
+.env
+.env.*
+!.env.example
+assets.generated.mjs
+vendor-random.js
+outputs/
+*.tar.gz
+docs/
