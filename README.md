@@ -9,8 +9,8 @@
 需要 Node.js 22.3+ 和 pnpm 11。
 
 ```sh
-git clone https://github.com/Lintaov587/llm-cube-challenge.git
-cd llm-cube-challenge
+git clone https://github.com/Lintaov587/AIMF.git
+cd AIMF
 pnpm install --frozen-lockfile
 pnpm build
 pnpm start
