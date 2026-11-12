@@ -46,15 +46,17 @@ async function browserApi(request,db,path){
  const ai=token();await db.batch([db.prepare('UPDATE commands SET status=\'cancelled\' WHERE session=? AND status IN (\'pending\',\'running\')').bind(s.id),db.prepare('UPDATE sessions SET ai_hash=?,ai_owner=NULL,active_command=NULL WHERE id=?').bind(await hash(ai),s.id)]);return json({code:s.id+'.'+ai});
  }
  if(path==='/api/session/sync'||path==='/api/session/poll'){
- const state=publicState(data.state);
- const operations=[db.prepare('UPDATE sessions SET state=CASE WHEN coalesce(json_extract(state,\'$.revision\'),0)<=? THEN ? ELSE state END,last_seen=? WHERE id=?').bind(state.revision,JSON.stringify(state),now,s.id)];
+ const operations=[];
+ if(data.state){const state=publicState(data.state);if(state.revision>JSON.parse(s.state).revision)operations.push(db.prepare('UPDATE sessions SET state=?,last_seen=? WHERE id=? AND coalesce(json_extract(state,\'$.revision\'),0)<?').bind(JSON.stringify(state),now,s.id,state.revision));}
+ if(now-s.last_seen>=60000)operations.push(db.prepare('UPDATE sessions SET last_seen=? WHERE id=? AND last_seen<=?').bind(now,s.id,now-60000));
  if(data.command){
  const result=data.error?{error:String(data.error)}:publicState(data.result);
  operations.push(db.prepare('UPDATE commands SET status=\'done\',result=? WHERE id=? AND session=? AND status=\'running\'').bind(JSON.stringify(result),data.command,s.id));
  operations.push(db.prepare('UPDATE sessions SET active_command=NULL WHERE id=? AND active_command=?').bind(s.id,data.command));
  }
- await db.batch(operations);
+ if(operations.length)await db.batch(operations);
  if(path.endsWith('/sync'))return json({ok:true});
+ if(!s.active_command)return json({command:null});
  // A command can only be delivered once, including when requests overlap.
  const command=await db.prepare('UPDATE commands SET status=\'running\' WHERE id=(SELECT id FROM commands WHERE session=? AND status=\'pending\' AND expires>? LIMIT 1) AND status=\'pending\' RETURNING id,payload').bind(s.id,now).first();
  return json({command:command?{id:command.id,...JSON.parse(command.payload)}:null});
@@ -102,7 +104,7 @@ async function mcp(request,db){
  const user=request.headers.get('oai-authenticated-user-id');if(!user)fail('请登录后通过 Site 插件连接 AI');
  const s=await db.prepare('SELECT * FROM sessions WHERE id=? AND ai_hash=? AND expires>?').bind(id,await hash(secret),Date.now()).first();
  if(!s||(s.owner&&s.owner!==user)||(s.ai_owner&&s.ai_owner!==user))fail('会话码无效或不属于当前账号');
- if(Date.now()-s.last_seen>15000)fail('游戏页面未在线，请先打开对应页面');
+ if(Date.now()-s.last_seen>90000)fail('游戏页面未在线，请先打开对应页面');
  const claimed=await db.prepare('UPDATE sessions SET ai_owner=? WHERE id=? AND (ai_owner IS NULL OR ai_owner=?) RETURNING id').bind(user,id,user).first();
  if(!claimed)fail('会话已连接到其他账号');
  if(name==='cube_observe')return respond({content:[{type:'text',text:JSON.stringify(JSON.parse(s.state))}]});
@@ -117,7 +119,7 @@ async function httpAi(request,db,path){
  const [id,secret]=code.split('.');
  const session=await db.prepare('SELECT * FROM sessions WHERE id=? AND ai_hash=? AND expires>?').bind(id,await hash(secret),Date.now()).first();
  if(!session)return json({error:'会话码已失效'},401);
- if(Date.now()-session.last_seen>15000)return json({error:'游戏页面未在线'},409);
+ if(Date.now()-session.last_seen>90000)return json({error:'游戏页面未在线'},409);
  if(path==='/api/ai/state')return json(JSON.parse(session.state));
  const args=await request.json();if(!args||typeof args!=='object'||Array.isArray(args))return json({error:'无效操作'},400);
  const value=await runAction(db,session,args.type,args);return json(value,value.error?400:200);

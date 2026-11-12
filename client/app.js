@@ -188,7 +188,7 @@ try{
  async function bootSession(){try{
  $('activity').textContent='';
  link=await createLink({snapshot,execute:c=>action(c,'AI'),status:connectionStatus});
- $('config').textContent=link.copyText;initialized=true;document.body.classList.remove('initializing');ui();$('help-dialog').showModal();
+ $('config').textContent=link.copyText;$('mcp').addEventListener('click',async()=>{$('copy').disabled=true;try{await link.connect();$('config').textContent=link.copyText;}catch(error){$('config').textContent=error.message;}finally{$('copy').disabled=!link.copyText;}});initialized=true;document.body.classList.remove('initializing');ui();$('help-dialog').showModal();
  if(link.remote){$('connect-title').textContent='让 AI 还原这一局';$('dialog').querySelector('p').textContent='复制后发给支持 HTTP 请求的 AI，连接这一局。';$('copy').textContent='复制全部';
  const revoke=document.createElement('button');revoke.textContent='撤销 AI 连接';revoke.className='secondary';revoke.onclick=async()=>{if(busy)return;try{await link.revoke();$('config').textContent=link.copyText;toast('旧会话码已失效');}catch(e){toast(e.message);}};$('dialog').appendChild(revoke);
  }
