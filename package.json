@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node local.mjs",
     "build": "node build.mjs",
-    "build:pages": "node build-pages.mjs",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "build:cloudflare": "node build.mjs && node build-cloudflare.mjs"
   },
   "dependencies": {
     "three": "0.180.0",

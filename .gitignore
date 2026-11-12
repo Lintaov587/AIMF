@@ -10,3 +10,8 @@ vendor-random.js
 outputs/
 *.tar.gz
 docs/
+cloudflare-dist/
+cloudflare-admin.generated.mjs
+.wrangler/
+.tool-cache/
+cloudflare-core.generated.mjs

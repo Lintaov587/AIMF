@@ -1,0 +1,13 @@
+{
+  "name": "llm-cube-challenge",
+  "pages_build_output_dir": "cloudflare-dist",
+  "compatibility_date": "2026-07-30",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "llm-cube-challenge",
+      "database_id": "8240af85-9b46-4058-ba54-a51ee06aba93",
+      "migrations_dir": "drizzle"
+    }
+  ]
+}

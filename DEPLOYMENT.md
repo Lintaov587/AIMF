@@ -1,35 +1,33 @@
 # 部署
 
-## 本地完整版本
+## 本地运行
 
-执行 README 中的安装、构建和启动命令。`PORT` 可指定端口，默认 `3210`。SQLite 数据与迁移记录保存在 `.local/d1/`，服务重启后保留；不要将 `.local/` 发布到仓库。
+按 README 安装、构建并启动。`PORT` 默认为 `3210`，服务只监听 `127.0.0.1`。SQLite 数据保存在 `.local/d1/`。本地 `/admin` 仅供本机管理。
 
-`/admin` 是仅在本机可访问的管理界面。它使用本地适配器身份；请勿将此 loopback 适配器直接改为公网监听。
+## Cloudflare Pages
 
-## GitHub Pages 前端
-
-先执行 `pnpm build`，再明确指定 Pages 子路径和后端地址：
+前端、AI HTTP API 和榜单共用 Pages 域名，D1 绑定名为 `DB`。无需 Sites 后端。使用 Node.js 24、pnpm 11.25 和 Wrangler 4.160.0。
 
 ```sh
-PAGES_BASE=/llm-cube-challenge/ PAGES_BACKEND=https://cube-coop-lintao.miniatureagate1.chatgpt.site node build-pages.mjs
+pnpm build:cloudflare
+pnpm dlx wrangler@4.160.0 d1 migrations apply DB --remote
+pnpm dlx wrangler@4.160.0 pages deploy cloudflare-dist --project-name llm-cube-challenge --branch main
 ```
 
-PowerShell：
+首次独立部署时，先登录 Wrangler，创建自己的 D1 与 Pages 项目，将 `wrangler.json` 中的名称和 database_id 换为自己的资源。Pages 项目创建使用 `wrangler pages project create <name> --production-branch main --force`；现有项目后续命令不加 `--force`。
 
-```powershell
-$env:PAGES_BASE='/llm-cube-challenge/'
-$env:PAGES_BACKEND='https://cube-coop-lintao.miniatureagate1.chatgpt.site'
-node build-pages.mjs
-```
+`build:cloudflare` 将静态资源交给 CDN，API 编译为 `_worker.js`。`_routes.json` 只让会话、AI、榜单和管理请求进入 Worker，普通资源访问不调用 API Worker。
 
-在仓库 Settings → Pages 选择 GitHub Actions。推送到 main 后，`.github/workflows/pages.yml` 自动构建并发布 `docs/`；生成目录不提交到 Git。构建产物包含 `.nojekyll`，无需服务端或 Jekyll。
+## 榜单后台
 
-如果使用自己的后端，需在后端 `ALLOWED_ORIGINS` 中加入 Pages 的精确 origin，例如 `https://your-name.github.io`。只允许游戏会话、AI 接口和榜单读取跨域，不开放后台管理或 MCP 跨域访问。用户会话凭证仍然独立校验。
+打开 `/admin`，输入管理密钥。原始密钥为加密安全随机生成的 32 字节十六进制字符串，只保存在管理员本机，不放在前端、仓库或 URL。
 
-## 云端后端
+Cloudflare Pages 的生产 Secret `ADMIN_TOKEN_HASH` 保存该密钥文本的 SHA-256 十六进制摘要。可用 `wrangler pages secret put ADMIN_TOKEN_HASH --project-name <name>` 设置；更新 Secret 后重新部署。每次管理请求都验证密钥，浏览器仅在当前页面内存中保存。刷新后需重新输入。
 
-`worker.js` 是 Cloudflare Worker ESM 源码，`pnpm build` 输出 `dist/server/index.js`。需要 D1 绑定 `DB` 并应用 `drizzle/` 的迁移。`.openai/hosting.json` 是不含 Site 身份的部署模板；在自己的 Sites 注册后填入其返回的 project_id。
+Cloudflare 适配器不信任客户端传入的 Sites 身份头，管理请求也不允许跨域。Cloudflare 版本使用 HTTP AI 接口，`/mcp` 不开放。
 
-Sites 管理员身份由平台提供的已验证请求头决定，`ADMIN_EMAIL` 应配置为站点所有者邮箱并存为服务端 Secret。项目不包含原站点的管理员凭证、数据库数据或运行会话。
+## AI 接口
 
-AI HTTP 接口是 `/api/ai/state` 与 `/api/ai/action`，使用本局会话码。接口契约为 `/api/ai/schema`；`/mcp` 是可选的 Sites MCP 集成。
+`GET /api/ai/state` 与 `POST /api/ai/action` 使用 `Authorization: Bearer <本局会话码>`。接口契约位于 `/api/ai/schema`。会话码由当前游戏页面生成，玩家之间独立，页面关闭后结束。
+
+`.local/`、`.env*`、`.wrangler/` 和生成目录均不提交。不要公开管理密钥、Cloudflare 登录凭证或活动会话码。

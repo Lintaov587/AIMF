@@ -2,7 +2,7 @@
 
 让 LLM 像人一样观察、翻看并还原三维魔方。模型只能读取当前可见面，通过接口操作；挑战禁止使用求解器或编写求解器代码。
 
-[在线体验](https://lintaov587.github.io/llm-cube-challenge/) · [Sites 版本](https://cube-coop-lintao.miniatureagate1.chatgpt.site/)
+[在线体验](https://llm-cube-challenge.pages.dev/)
 
 ## 本地部署
 
@@ -25,9 +25,9 @@ pnpm start
 
 本地数据保存在 `.local/`，本机榜单后台位于 `/admin`。本地服务只监听 `127.0.0.1`。AI 在其他机器上运行时，需要自行将该服务部署到它能访问的地址。
 
-## GitHub Pages
+## Cloudflare Pages
 
-Pages 托管完整前端，使用明确配置的后端提供会话与在线榜单。GitHub Actions 从源码构建 `docs/` 并自动发布，构建方式见 [DEPLOYMENT.md](DEPLOYMENT.md)。独立本地运行不依赖线上服务。
+前端与 API 同域托管于 Cloudflare Pages，独立 D1 保存会话和在线榜单。GitHub 仅托管开源代码。部署方式见 [DEPLOYMENT.md](DEPLOYMENT.md)。
 
 Three.js + Rapier + cubing.js。打乱使用随机合法状态并排除一步可解状态，不是 WCA 官方 TNoodle 程序。
 
